@@ -169,6 +169,20 @@ impl ToStr for Sight {
     }
 }
 
+impl Sight {
+    pub fn to_eng(&self) -> &'static str {
+        match self {
+            Sight::None => "None",
+            Sight::X1_0 => "1.0x",
+            Sight::X1_5 => "1.5x",
+            Sight::X2_0 => "2.0x",
+            Sight::X2_5 => "2.5x",
+            Sight::X3_0 => "3.0x",
+            Sight::X4_0 => "4.0x",
+        }
+    }
+}
+
 // 枪管
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, ValueEnum)]
 pub enum Barrel {
@@ -195,6 +209,18 @@ impl ToStr for Barrel {
     }
 }
 
+impl Barrel {
+    pub fn to_eng(&self) -> &'static str {
+        match self {
+            Barrel::None => "None",
+            Barrel::FlashHider => "FlashHider",
+            Barrel::Compensator => "Compensator",
+            Barrel::Silencer => "Silencer",
+            Barrel::ExtendedBarrel => "ExtendedBarrel",
+        }
+    }
+}
+
 // 握把
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, ValueEnum)]
 pub enum Grip {
@@ -211,6 +237,16 @@ impl ToStr for Grip {
             Grip::None => "无",
             Grip::Vertical => "垂直握把",
             Grip::Angled => "拐角握把"
+        }
+    }
+}
+
+impl Grip {
+    pub fn to_eng(&self) -> &'static str {
+        match self {
+            Grip::None => "None",
+            Grip::Vertical => "Vertical",
+            Grip::Angled => "Angled",
         }
     }
 }
