@@ -9,7 +9,7 @@ use eframe::egui::Context;
 use eframe::Frame;
 use serde::{Deserialize, Serialize};
 use windows::Win32::UI::Input::KeyboardAndMouse::VIRTUAL_KEY;
-use crate::ui::{Aim, is_pressed, mouse, State};
+use crate::ui::{Aim, is_enabled, is_pressed, mouse, State};
 use crate::ui::font::load_fonts;
 use crate::weapon::{ToStr, Weapon};
 
@@ -183,6 +183,7 @@ impl eframe::App for Macro {
                 Hand::Deputy => "已禁用",
             });
             ui.separator();
+            ui.label("大写锁定键为全局启用");
             ui.label("+/- 调整下压值");
             ui.label("1/2 启用/禁用宏");
             ui.label("先按住右键再按住左键开始下压");
@@ -203,7 +204,9 @@ impl eframe::App for Macro {
             self.hand = Hand::Deputy;
         }
 
-        if let Hand::Main = self.hand { mouse(self.level, &mut self.aim); }
+        if is_enabled() {
+            if let Hand::Main = self.hand { mouse(self.level, &mut self.aim); }
+        }
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {

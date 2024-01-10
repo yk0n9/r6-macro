@@ -11,7 +11,7 @@ mod weapon;
 fn main() {
     let viewport = ViewportBuilder {
         resizable: Some(false),
-        inner_size: Some(Vec2::new(400.0, 400.0)),
+        inner_size: Some(Vec2::new(400.0, 500.0)),
         maximize_button: Some(false),
         ..Default::default()
     };

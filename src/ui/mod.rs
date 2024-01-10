@@ -1,7 +1,7 @@
 use std::mem::{size_of, zeroed};
 use std::thread;
 use std::time::Duration;
-use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, INPUT, INPUT_0, INPUT_MOUSE, MOUSEEVENTF_MOVE, MOUSEINPUT, SendInput, VIRTUAL_KEY, VK_LBUTTON, VK_RBUTTON};
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, GetKeyState, INPUT, INPUT_0, INPUT_MOUSE, MOUSEEVENTF_MOVE, MOUSEINPUT, SendInput, VIRTUAL_KEY, VK_CAPITAL, VK_LBUTTON, VK_RBUTTON};
 
 pub mod r#macro;
 pub mod font;
@@ -28,6 +28,11 @@ fn mouse_down(val: i32) {
 #[inline]
 fn is_pressed(vk: VIRTUAL_KEY) -> bool {
     unsafe { GetAsyncKeyState(vk.0 as i32) as u32 >> 31 == 1 }
+}
+
+#[inline]
+fn is_enabled() -> bool {
+    unsafe { GetKeyState(VK_CAPITAL.0 as i32) & 0x0001 != 0 }
 }
 
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
