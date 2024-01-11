@@ -1,11 +1,17 @@
 use std::mem::{size_of, zeroed};
 use std::thread;
 use std::time::Duration;
+
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, GetKeyState, INPUT, INPUT_0, INPUT_MOUSE, MOUSEEVENTF_MOVE, MOUSEINPUT, SendInput, VIRTUAL_KEY, VK_CAPITAL, VK_LBUTTON, VK_RBUTTON};
+
+use crate::ui::r#macro::Hand;
 
 pub mod r#macro;
 pub mod font;
 
+static mut HAND: Hand = Hand::Main;
+static mut AIM: Aim = Aim::None;
+static mut LEVEL: i32 = 1;
 static mut I: INPUT = INPUT {
     r#type: INPUT_MOUSE,
     Anonymous: INPUT_0 {
@@ -50,23 +56,31 @@ pub struct State {
 }
 
 #[inline]
-pub fn mouse(level: i32, aim: &mut Aim) {
-    if !is_pressed(VK_RBUTTON) && !is_pressed(VK_LBUTTON) {
-        *aim = Aim::None;
-    }
-    match aim {
-        Aim::Right => {
-            if is_pressed(VK_RBUTTON) && is_pressed(VK_LBUTTON) {
-                mouse_down(level);
-            }
+pub unsafe fn mouse() {
+    loop {
+        if !is_enabled() {
+            continue;
         }
-        Aim::None => {
-            if is_pressed(VK_LBUTTON) {
-                *aim = Aim::Left;
-            } else if is_pressed(VK_RBUTTON) {
-                *aim = Aim::Right
-            }
+        if let Hand::Deputy = HAND {
+            continue;
         }
-        _ => {}
+        if !is_pressed(VK_RBUTTON) && !is_pressed(VK_LBUTTON) {
+            AIM = Aim::None;
+        }
+        match AIM {
+            Aim::Right => {
+                if is_pressed(VK_RBUTTON) && is_pressed(VK_LBUTTON) {
+                    mouse_down(LEVEL);
+                }
+            }
+            Aim::None => {
+                if is_pressed(VK_LBUTTON) {
+                    AIM = Aim::Left;
+                } else if is_pressed(VK_RBUTTON) {
+                    AIM = Aim::Right
+                }
+            }
+            _ => {}
+        }
     }
 }

@@ -7,7 +7,7 @@ use eframe::egui::Context;
 use eframe::Frame;
 use serde::{Deserialize, Serialize};
 use windows::Win32::UI::Input::KeyboardAndMouse::VIRTUAL_KEY;
-use crate::ui::{Aim, is_enabled, is_pressed, mouse, State};
+use crate::ui::{HAND, is_pressed, LEVEL, State};
 use crate::ui::font::set_style;
 use crate::weapon::{ToStr, Weapon};
 
@@ -30,11 +30,8 @@ pub struct Config {
 }
 
 pub struct Macro {
-    pub hand: Hand,
     pub hand_state: HandState,
     pub weapon: Weapon,
-    pub level: i32,
-    pub aim: Aim,
     pub state: State,
     pub config: Config,
     pub editing_name: String,
@@ -45,11 +42,8 @@ impl Macro {
     pub fn new(cc: &CreationContext) -> Self {
         set_style(cc);
         Self {
-            hand: Hand::Main,
             hand_state: Default::default(),
             weapon: Default::default(),
-            level: 1,
-            aim: Default::default(),
             state: Default::default(),
             config: Default::default(),
             editing_name: String::new(),
@@ -61,7 +55,7 @@ impl Macro {
 impl eframe::App for Macro {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         ctx.request_repaint();
-        CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show(ctx, |ui| unsafe {
             ui.label("R6 Macro");
             ui.separator();
             ComboBox::from_label("主手武器")
@@ -71,7 +65,7 @@ impl eframe::App for Macro {
                     for name in crate::weapon::Name::value_variants() {
                         if ui.selectable_value(&mut self.weapon.name, *name, name.to_str()).changed() {
                             if let Some(value) = self.config.map.get(&self.weapon) {
-                                self.level = *value;
+                                LEVEL = *value;
                             }
                         }
                     }
@@ -83,7 +77,7 @@ impl eframe::App for Macro {
                     for sight in crate::weapon::Sight::value_variants() {
                         if ui.selectable_value(&mut self.weapon.sight, *sight, sight.to_str()).changed() {
                             if let Some(value) = self.config.map.get(&self.weapon) {
-                                self.level = *value;
+                                LEVEL = *value;
                             }
                         }
                     }
@@ -95,7 +89,7 @@ impl eframe::App for Macro {
                     for barrel in crate::weapon::Barrel::value_variants() {
                         if ui.selectable_value(&mut self.weapon.barrel, *barrel, barrel.to_str()).changed() {
                             if let Some(value) = self.config.map.get(&self.weapon) {
-                                self.level = *value;
+                                LEVEL = *value;
                             }
                         }
                     }
@@ -107,20 +101,20 @@ impl eframe::App for Macro {
                     for grip in crate::weapon::Grip::value_variants() {
                         if ui.selectable_value(&mut self.weapon.grip, *grip, grip.to_str()).changed() {
                             if let Some(value) = self.config.map.get(&self.weapon) {
-                                self.level = *value;
+                                LEVEL = *value;
                             }
                         }
                     }
                 });
             ui.horizontal(|ui| {
-                let level = ui.add(DragValue::new(&mut self.level));
+                let level = ui.add(DragValue::new(&mut LEVEL));
                 let sub = is_pressed(VIRTUAL_KEY(189)) || is_pressed(VIRTUAL_KEY(109));
                 if !sub {
                     self.state.sub = false
                 }
-                if sub != self.state.sub && self.level > 1 {
+                if sub != self.state.sub {
                     self.state.sub = sub;
-                    self.level -= 1;
+                    LEVEL -= 1;
                 }
                 let add = is_pressed(VIRTUAL_KEY(187)) || is_pressed(VIRTUAL_KEY(107));
                 if !add {
@@ -128,10 +122,10 @@ impl eframe::App for Macro {
                 }
                 if add != self.state.add {
                     self.state.add = add;
-                    self.level += 1;
+                    LEVEL += 1;
                 }
                 if level.changed() {
-                    self.config.map.insert(self.weapon, self.level);
+                    self.config.map.insert(self.weapon, LEVEL);
                 }
                 ui.label("下压值");
             });
@@ -141,9 +135,9 @@ impl eframe::App for Macro {
                 ui.add(TextEdit::singleline(&mut self.editing_name).desired_width(100.0));
                 if ui.button(if self.current_name.eq(&self.editing_name) { "覆盖收藏" } else { "添加收藏" }).clicked() {
                     if !self.editing_name.is_empty() {
-                        if let None = self.config.favorites.values().find(|value| value.eq(&&(self.weapon, self.level))) {
+                        if let None = self.config.favorites.values().find(|value| value.eq(&&(self.weapon, LEVEL))) {
                             self.current_name = self.editing_name.clone();
-                            self.config.favorites.insert(self.editing_name.clone(), (self.weapon, self.level));
+                            self.config.favorites.insert(self.editing_name.clone(), (self.weapon, LEVEL));
                         }
                     }
                 }
@@ -154,7 +148,7 @@ impl eframe::App for Macro {
                         if ui.selectable_value(&mut self.weapon, favorite.1.0, favorite.0.as_str()).changed() {
                             self.current_name = favorite.0.to_string();
                             self.editing_name = favorite.0.to_string();
-                            self.level = favorite.1.1;
+                            LEVEL = favorite.1.1;
                         }
                     }
                 });
@@ -164,7 +158,7 @@ impl eframe::App for Macro {
                 }
             });
             ui.separator();
-            ui.label(match self.hand {
+            ui.label(match HAND {
                 Hand::Main => "已启用",
                 Hand::Deputy => "已禁用",
             });
@@ -180,18 +174,14 @@ impl eframe::App for Macro {
         if !main { self.hand_state.main = false; }
         if main != self.hand_state.main {
             self.hand_state.main = main;
-            self.hand = Hand::Main;
+            unsafe { HAND = Hand::Main; }
         }
 
         let deputy = is_pressed(VIRTUAL_KEY(50));
         if !deputy { self.hand_state.deputy = false; }
         if deputy != self.hand_state.deputy {
             self.hand_state.deputy = deputy;
-            self.hand = Hand::Deputy;
-        }
-
-        if is_enabled() {
-            if let Hand::Main = self.hand { mouse(self.level, &mut self.aim); }
+            unsafe { HAND = Hand::Deputy; }
         }
     }
 

@@ -1,8 +1,12 @@
 #![windows_subsystem = "windows"]
 
 use std::fs::read_to_string;
+use std::thread;
+
 use eframe::egui::{Vec2, ViewportBuilder};
 use eframe::NativeOptions;
+
+use crate::ui::mouse;
 use crate::ui::r#macro::Macro;
 
 mod ui;
@@ -19,6 +23,9 @@ fn main() {
         viewport,
         ..Default::default()
     };
+    thread::spawn(move || unsafe {
+        mouse();
+    });
     eframe::run_native("R6 Macro", op, Box::new(|cc| {
         let mut r6 = Macro::new(cc);
         if let Ok(file) = read_to_string("r6-config.txt") {
