@@ -1,10 +1,13 @@
 use std::mem::{size_of, zeroed};
 use std::thread;
 use std::time::Duration;
-use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, GetKeyState, INPUT, INPUT_0, INPUT_MOUSE, MOUSEEVENTF_MOVE, MOUSEINPUT, SendInput, VIRTUAL_KEY, VK_CAPITAL, VK_LBUTTON, VK_RBUTTON};
+use windows::Win32::UI::Input::KeyboardAndMouse::{
+    GetAsyncKeyState, GetKeyState, SendInput, INPUT, INPUT_0, INPUT_MOUSE, MOUSEEVENTF_MOVE,
+    MOUSEINPUT, VIRTUAL_KEY, VK_CAPITAL, VK_LBUTTON, VK_RBUTTON,
+};
 
-pub mod r#macro;
 pub mod font;
+pub mod r#macro;
 
 static mut I: INPUT = INPUT {
     r#type: INPUT_MOUSE,

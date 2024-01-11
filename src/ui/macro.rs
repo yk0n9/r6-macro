@@ -1,15 +1,15 @@
-use std::collections::{BTreeMap, HashMap};
-use std::fs::write;
+use crate::ui::font::set_style;
+use crate::ui::{is_enabled, is_pressed, mouse, Aim, State};
+use crate::weapon::{ToStr, Weapon};
 use clap::ValueEnum;
+use eframe::egui::Context;
 use eframe::egui::{CentralPanel, ComboBox, DragValue, TextEdit};
 use eframe::CreationContext;
-use eframe::egui::Context;
 use eframe::Frame;
 use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap};
+use std::fs::write;
 use windows::Win32::UI::Input::KeyboardAndMouse::VIRTUAL_KEY;
-use crate::ui::{Aim, is_enabled, is_pressed, mouse, State};
-use crate::ui::font::set_style;
-use crate::weapon::{ToStr, Weapon};
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct HandState {
@@ -71,7 +71,10 @@ impl eframe::App for Macro {
                 .show_ui(ui, |ui| {
                     ui.style_mut().wrap = Some(false);
                     for name in crate::weapon::Name::value_variants() {
-                        if ui.selectable_value(&mut self.weapon.name, *name, name.to_str()).changed() {
+                        if ui
+                            .selectable_value(&mut self.weapon.name, *name, name.to_str())
+                            .changed()
+                        {
                             if let Some(value) = self.config.map.get(&self.weapon) {
                                 self.horizontal = value.0;
                                 self.vertical = value.1;
@@ -84,7 +87,10 @@ impl eframe::App for Macro {
                 .show_ui(ui, |ui| {
                     ui.style_mut().wrap = Some(false);
                     for sight in crate::weapon::Sight::value_variants() {
-                        if ui.selectable_value(&mut self.weapon.sight, *sight, sight.to_str()).changed() {
+                        if ui
+                            .selectable_value(&mut self.weapon.sight, *sight, sight.to_str())
+                            .changed()
+                        {
                             if let Some(value) = self.config.map.get(&self.weapon) {
                                 self.horizontal = value.0;
                                 self.vertical = value.1;
@@ -97,7 +103,10 @@ impl eframe::App for Macro {
                 .show_ui(ui, |ui| {
                     ui.style_mut().wrap = Some(false);
                     for barrel in crate::weapon::Barrel::value_variants() {
-                        if ui.selectable_value(&mut self.weapon.barrel, *barrel, barrel.to_str()).changed() {
+                        if ui
+                            .selectable_value(&mut self.weapon.barrel, *barrel, barrel.to_str())
+                            .changed()
+                        {
                             if let Some(value) = self.config.map.get(&self.weapon) {
                                 self.horizontal = value.0;
                                 self.vertical = value.1;
@@ -110,7 +119,10 @@ impl eframe::App for Macro {
                 .show_ui(ui, |ui| {
                     ui.style_mut().wrap = Some(false);
                     for grip in crate::weapon::Grip::value_variants() {
-                        if ui.selectable_value(&mut self.weapon.grip, *grip, grip.to_str()).changed() {
+                        if ui
+                            .selectable_value(&mut self.weapon.grip, *grip, grip.to_str())
+                            .changed()
+                        {
                             if let Some(value) = self.config.map.get(&self.weapon) {
                                 self.horizontal = value.0;
                                 self.vertical = value.1;
@@ -137,7 +149,9 @@ impl eframe::App for Macro {
                     self.horizontal += 1;
                 }
                 if horizontal.changed() {
-                    self.config.map.insert(self.weapon, (self.horizontal, self.vertical));
+                    self.config
+                        .map
+                        .insert(self.weapon, (self.horizontal, self.vertical));
                 }
                 ui.label("水平方向强度");
             });
@@ -160,7 +174,9 @@ impl eframe::App for Macro {
                     self.vertical += 1;
                 }
                 if vertical.changed() {
-                    self.config.map.insert(self.weapon, (self.horizontal, self.vertical));
+                    self.config
+                        .map
+                        .insert(self.weapon, (self.horizontal, self.vertical));
                 }
                 ui.label("垂直方向强度");
             });
@@ -168,26 +184,47 @@ impl eframe::App for Macro {
             ui.horizontal(|ui| {
                 ui.label("名称");
                 ui.add(TextEdit::singleline(&mut self.editing_name).desired_width(100.0));
-                if ui.button(if self.current_name.eq(&self.editing_name) { "覆盖收藏" } else { "添加收藏" }).clicked() {
+                if ui
+                    .button(if self.current_name.eq(&self.editing_name) {
+                        "覆盖收藏"
+                    } else {
+                        "添加收藏"
+                    })
+                    .clicked()
+                {
                     if !self.editing_name.is_empty() {
-                        if let None = self.config.favorites.values().find(|value| value.eq(&&(self.weapon, (self.horizontal, self.vertical)))) {
+                        if let None = self.config.favorites.values().find(|value| {
+                            value.eq(&&(self.weapon, (self.horizontal, self.vertical)))
+                        }) {
                             self.current_name = self.editing_name.clone();
-                            self.config.favorites.insert(self.editing_name.clone(), (self.weapon, (self.horizontal, self.vertical)));
+                            self.config.favorites.insert(
+                                self.editing_name.clone(),
+                                (self.weapon, (self.horizontal, self.vertical)),
+                            );
                         }
                     }
                 }
             });
             ui.horizontal(|ui| {
-                ComboBox::from_label("收藏列表").selected_text(self.current_name.as_str()).show_ui(ui, |ui| {
-                    for favorite in self.config.favorites.iter() {
-                        if ui.selectable_value(&mut self.weapon, favorite.1.0, favorite.0.as_str()).changed() {
-                            self.current_name = favorite.0.to_string();
-                            self.editing_name = favorite.0.to_string();
-                            self.horizontal = favorite.1.1.0;
-                            self.vertical = favorite.1.1.1;
+                ComboBox::from_label("收藏列表")
+                    .selected_text(self.current_name.as_str())
+                    .show_ui(ui, |ui| {
+                        for favorite in self.config.favorites.iter() {
+                            if ui
+                                .selectable_value(
+                                    &mut self.weapon,
+                                    favorite.1 .0,
+                                    favorite.0.as_str(),
+                                )
+                                .changed()
+                            {
+                                self.current_name = favorite.0.to_string();
+                                self.editing_name = favorite.0.to_string();
+                                self.horizontal = favorite.1 .1 .0;
+                                self.vertical = favorite.1 .1 .1;
+                            }
                         }
-                    }
-                });
+                    });
                 if ui.button("删除当前收藏").clicked() {
                     self.config.favorites.remove(&self.current_name);
                     self.current_name = String::new();
@@ -208,21 +245,27 @@ impl eframe::App for Macro {
         });
 
         let main = is_pressed(VIRTUAL_KEY(49));
-        if !main { self.hand_state.main = false; }
+        if !main {
+            self.hand_state.main = false;
+        }
         if main != self.hand_state.main {
             self.hand_state.main = main;
             self.hand = Hand::Main;
         }
 
         let deputy = is_pressed(VIRTUAL_KEY(50));
-        if !deputy { self.hand_state.deputy = false; }
+        if !deputy {
+            self.hand_state.deputy = false;
+        }
         if deputy != self.hand_state.deputy {
             self.hand_state.deputy = deputy;
             self.hand = Hand::Deputy;
         }
 
         if is_enabled() {
-            if let Hand::Main = self.hand { mouse(self.horizontal, self.vertical, &mut self.aim); }
+            if let Hand::Main = self.hand {
+                mouse(self.horizontal, self.vertical, &mut self.aim);
+            }
         }
     }
 

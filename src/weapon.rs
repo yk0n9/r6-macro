@@ -210,7 +210,7 @@ impl ToStr for Grip {
         match self {
             Grip::None => "无",
             Grip::Vertical => "垂直握把",
-            Grip::Angled => "拐角握把"
+            Grip::Angled => "拐角握把",
         }
     }
 }

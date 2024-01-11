@@ -1,7 +1,7 @@
-use eframe::{CreationContext, egui};
 use eframe::egui::FontFamily::Proportional;
 use eframe::egui::FontId;
 use eframe::egui::TextStyle::{Body, Button, Heading, Monospace, Name, Small};
+use eframe::{egui, CreationContext};
 use font_kit::source::SystemSource;
 
 pub fn set_style(cc: &CreationContext) {
@@ -16,7 +16,7 @@ pub fn set_style(cc: &CreationContext) {
         (Button, FontId::new(14.0, Proportional)),
         (Small, FontId::new(10.0, Proportional)),
     ]
-        .into();
+    .into();
     cc.egui_ctx.set_style(style);
 }
 
