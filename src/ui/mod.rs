@@ -17,9 +17,10 @@ static mut I: INPUT = INPUT {
 };
 
 #[inline]
-fn mouse_down(val: i32) {
+fn mouse_down(horizontal: i32, vertical: i32) {
     unsafe {
-        I.Anonymous.mi.dy = val;
+        I.Anonymous.mi.dx = horizontal;
+        I.Anonymous.mi.dy = vertical;
         SendInput(&[I], size_of::<INPUT>() as i32);
     }
     thread::sleep(Duration::from_millis(10));
@@ -45,19 +46,21 @@ pub enum Aim {
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct State {
-    add: bool,
-    sub: bool,
+    down: bool,
+    up: bool,
+    left: bool,
+    right: bool,
 }
 
 #[inline]
-pub fn mouse(level: i32, aim: &mut Aim) {
+pub fn mouse(horizontal: i32, vertical: i32, aim: &mut Aim) {
     if !is_pressed(VK_RBUTTON) && !is_pressed(VK_LBUTTON) {
         *aim = Aim::None;
     }
     match aim {
         Aim::Right => {
             if is_pressed(VK_RBUTTON) && is_pressed(VK_LBUTTON) {
-                mouse_down(level);
+                mouse_down(horizontal, vertical);
             }
         }
         Aim::None => {

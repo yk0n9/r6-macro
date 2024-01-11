@@ -25,15 +25,16 @@ pub enum Hand {
 
 #[derive(Debug, Clone, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Config {
-    pub map: HashMap<Weapon, i32>,
-    pub favorites: BTreeMap<String, (Weapon, i32)>,
+    pub map: HashMap<Weapon, (i32, i32)>,
+    pub favorites: BTreeMap<String, (Weapon, (i32, i32))>,
 }
 
 pub struct Macro {
     pub hand: Hand,
     pub hand_state: HandState,
     pub weapon: Weapon,
-    pub level: i32,
+    pub horizontal: i32,
+    pub vertical: i32,
     pub aim: Aim,
     pub state: State,
     pub config: Config,
@@ -48,7 +49,8 @@ impl Macro {
             hand: Hand::Main,
             hand_state: Default::default(),
             weapon: Default::default(),
-            level: 1,
+            horizontal: 0,
+            vertical: 1,
             aim: Default::default(),
             state: Default::default(),
             config: Default::default(),
@@ -71,7 +73,8 @@ impl eframe::App for Macro {
                     for name in crate::weapon::Name::value_variants() {
                         if ui.selectable_value(&mut self.weapon.name, *name, name.to_str()).changed() {
                             if let Some(value) = self.config.map.get(&self.weapon) {
-                                self.level = *value;
+                                self.horizontal = value.0;
+                                self.vertical = value.1;
                             }
                         }
                     }
@@ -83,7 +86,8 @@ impl eframe::App for Macro {
                     for sight in crate::weapon::Sight::value_variants() {
                         if ui.selectable_value(&mut self.weapon.sight, *sight, sight.to_str()).changed() {
                             if let Some(value) = self.config.map.get(&self.weapon) {
-                                self.level = *value;
+                                self.horizontal = value.0;
+                                self.vertical = value.1;
                             }
                         }
                     }
@@ -95,7 +99,8 @@ impl eframe::App for Macro {
                     for barrel in crate::weapon::Barrel::value_variants() {
                         if ui.selectable_value(&mut self.weapon.barrel, *barrel, barrel.to_str()).changed() {
                             if let Some(value) = self.config.map.get(&self.weapon) {
-                                self.level = *value;
+                                self.horizontal = value.0;
+                                self.vertical = value.1;
                             }
                         }
                     }
@@ -107,33 +112,57 @@ impl eframe::App for Macro {
                     for grip in crate::weapon::Grip::value_variants() {
                         if ui.selectable_value(&mut self.weapon.grip, *grip, grip.to_str()).changed() {
                             if let Some(value) = self.config.map.get(&self.weapon) {
-                                self.level = *value;
+                                self.horizontal = value.0;
+                                self.vertical = value.1;
                             }
                         }
                     }
                 });
             ui.horizontal(|ui| {
-                let level = ui.add(DragValue::new(&mut self.level));
-                let sub = is_pressed(VIRTUAL_KEY(189)) || is_pressed(VIRTUAL_KEY(109));
-                if !sub {
-                    self.state.sub = false
+                let horizontal = ui.add(DragValue::new(&mut self.horizontal));
+                let left = is_pressed(VIRTUAL_KEY(219));
+                if !left {
+                    self.state.left = false
                 }
-                if sub != self.state.sub && self.level > 1 {
-                    self.state.sub = sub;
-                    self.level -= 1;
+                if left != self.state.left {
+                    self.state.left = left;
+                    self.horizontal -= 1;
                 }
-                let add = is_pressed(VIRTUAL_KEY(187)) || is_pressed(VIRTUAL_KEY(107));
-                if !add {
-                    self.state.add = false
+                let right = is_pressed(VIRTUAL_KEY(221));
+                if !right {
+                    self.state.right = false
                 }
-                if add != self.state.add {
-                    self.state.add = add;
-                    self.level += 1;
+                if right != self.state.right {
+                    self.state.right = right;
+                    self.horizontal += 1;
                 }
-                if level.changed() {
-                    self.config.map.insert(self.weapon, self.level);
+                if horizontal.changed() {
+                    self.config.map.insert(self.weapon, (self.horizontal, self.vertical));
                 }
-                ui.label("下压值");
+                ui.label("水平方向强度");
+            });
+            ui.horizontal(|ui| {
+                let vertical = ui.add(DragValue::new(&mut self.vertical));
+                let up = is_pressed(VIRTUAL_KEY(189)) || is_pressed(VIRTUAL_KEY(109));
+                if !up {
+                    self.state.up = false
+                }
+                if up != self.state.up {
+                    self.state.up = up;
+                    self.vertical -= 1;
+                }
+                let down = is_pressed(VIRTUAL_KEY(187)) || is_pressed(VIRTUAL_KEY(107));
+                if !down {
+                    self.state.down = false
+                }
+                if down != self.state.down {
+                    self.state.down = down;
+                    self.vertical += 1;
+                }
+                if vertical.changed() {
+                    self.config.map.insert(self.weapon, (self.horizontal, self.vertical));
+                }
+                ui.label("垂直方向强度");
             });
             ui.separator();
             ui.horizontal(|ui| {
@@ -141,9 +170,9 @@ impl eframe::App for Macro {
                 ui.add(TextEdit::singleline(&mut self.editing_name).desired_width(100.0));
                 if ui.button(if self.current_name.eq(&self.editing_name) { "覆盖收藏" } else { "添加收藏" }).clicked() {
                     if !self.editing_name.is_empty() {
-                        if let None = self.config.favorites.values().find(|value| value.eq(&&(self.weapon, self.level))) {
+                        if let None = self.config.favorites.values().find(|value| value.eq(&&(self.weapon, (self.horizontal, self.vertical)))) {
                             self.current_name = self.editing_name.clone();
-                            self.config.favorites.insert(self.editing_name.clone(), (self.weapon, self.level));
+                            self.config.favorites.insert(self.editing_name.clone(), (self.weapon, (self.horizontal, self.vertical)));
                         }
                     }
                 }
@@ -154,7 +183,8 @@ impl eframe::App for Macro {
                         if ui.selectable_value(&mut self.weapon, favorite.1.0, favorite.0.as_str()).changed() {
                             self.current_name = favorite.0.to_string();
                             self.editing_name = favorite.0.to_string();
-                            self.level = favorite.1.1;
+                            self.horizontal = favorite.1.1.0;
+                            self.vertical = favorite.1.1.1;
                         }
                     }
                 });
@@ -170,8 +200,9 @@ impl eframe::App for Macro {
             });
             ui.separator();
             ui.label("大写锁定键为全局启用");
-            ui.label("+/- 调整下压值");
-            ui.label("1/2 启用/禁用宏");
+            ui.label("[ / ] 调整水平方向值");
+            ui.label("+ / - 调整垂直方向值");
+            ui.label("1 / 2 启用/禁用宏");
             ui.label("先按住右键再按住左键开始下压");
             ui.label("请把常用的配置添加到收藏");
         });
@@ -191,7 +222,7 @@ impl eframe::App for Macro {
         }
 
         if is_enabled() {
-            if let Hand::Main = self.hand { mouse(self.level, &mut self.aim); }
+            if let Hand::Main = self.hand { mouse(self.horizontal, self.vertical, &mut self.aim); }
         }
     }
 
