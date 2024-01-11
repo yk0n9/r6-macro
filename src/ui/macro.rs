@@ -1,16 +1,14 @@
 use std::collections::{BTreeMap, HashMap};
 use std::fs::write;
 use clap::ValueEnum;
-use eframe::egui::FontFamily::Proportional;
-use eframe::egui::TextStyle::*;
-use eframe::egui::{CentralPanel, ComboBox, DragValue, FontId, TextEdit};
+use eframe::egui::{CentralPanel, ComboBox, DragValue, TextEdit};
 use eframe::CreationContext;
 use eframe::egui::Context;
 use eframe::Frame;
 use serde::{Deserialize, Serialize};
 use windows::Win32::UI::Input::KeyboardAndMouse::VIRTUAL_KEY;
 use crate::ui::{Aim, is_enabled, is_pressed, mouse, State};
-use crate::ui::font::load_fonts;
+use crate::ui::font::set_style;
 use crate::weapon::{ToStr, Weapon};
 
 #[derive(Debug, Copy, Clone, Default)]
@@ -45,19 +43,7 @@ pub struct Macro {
 
 impl Macro {
     pub fn new(cc: &CreationContext) -> Self {
-        load_fonts(&cc.egui_ctx);
-        let mut style = (*cc.egui_ctx.style()).clone();
-        style.text_styles = [
-            (Heading, FontId::new(20.0, Proportional)),
-            (Name("Heading2".into()), FontId::new(25.0, Proportional)),
-            (Name("Context".into()), FontId::new(23.0, Proportional)),
-            (Body, FontId::new(18.0, Proportional)),
-            (Monospace, FontId::new(14.0, Proportional)),
-            (Button, FontId::new(14.0, Proportional)),
-            (Small, FontId::new(10.0, Proportional)),
-        ]
-            .into();
-        cc.egui_ctx.set_style(style);
+        set_style(cc);
         Self {
             hand: Hand::Main,
             hand_state: Default::default(),
