@@ -9,6 +9,8 @@ use crate::ui::r#macro::Hand;
 pub mod r#macro;
 pub mod font;
 
+pub static mut LEAD_TIME: u64 = 0;
+static mut FIRST: bool = true;
 static mut HAND: Hand = Hand::Main;
 static mut AIM: Aim = Aim::None;
 static mut LEVEL: i32 = 1;
@@ -65,10 +67,15 @@ pub unsafe fn mouse() {
             continue;
         }
         if !is_pressed(VK_RBUTTON) && !is_pressed(VK_LBUTTON) {
+            FIRST = true;
             AIM = Aim::None;
         }
         match AIM {
             Aim::Right => {
+                if FIRST {
+                    FIRST = false;
+                    thread::sleep(Duration::from_millis(LEAD_TIME));
+                }
                 if is_pressed(VK_RBUTTON) && is_pressed(VK_LBUTTON) {
                     mouse_down(LEVEL);
                 }

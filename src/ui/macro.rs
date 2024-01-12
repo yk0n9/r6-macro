@@ -7,7 +7,7 @@ use eframe::egui::Context;
 use eframe::Frame;
 use serde::{Deserialize, Serialize};
 use windows::Win32::UI::Input::KeyboardAndMouse::VIRTUAL_KEY;
-use crate::ui::{HAND, is_pressed, LEVEL, State};
+use crate::ui::{HAND, is_pressed, LEAD_TIME, LEVEL, State};
 use crate::ui::font::set_style;
 use crate::weapon::{ToStr, Weapon};
 
@@ -27,6 +27,7 @@ pub enum Hand {
 pub struct Config {
     pub map: HashMap<Weapon, i32>,
     pub favorites: BTreeMap<String, (Weapon, i32)>,
+    pub lead_time: u64,
 }
 
 pub struct Macro {
@@ -128,6 +129,12 @@ impl eframe::App for Macro {
                     self.config.map.insert(self.weapon, LEVEL);
                 }
                 ui.label("下压值");
+            });
+            ui.horizontal(|ui| {
+                if ui.add(DragValue::new(&mut LEAD_TIME).suffix("毫秒")).changed() {
+                    self.config.lead_time = LEAD_TIME;
+                }
+                ui.label("下压前置时间");
             });
             ui.separator();
             ui.horizontal(|ui| {
