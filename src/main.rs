@@ -10,7 +10,6 @@ use crate::ui::{LEAD_TIME, mouse};
 use crate::ui::r#macro::Macro;
 
 mod ui;
-mod weapon;
 
 fn main() {
     let viewport = ViewportBuilder {

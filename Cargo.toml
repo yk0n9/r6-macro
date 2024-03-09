@@ -7,13 +7,12 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-windows = { version = "0.52", features = ["Win32_UI_Input_KeyboardAndMouse"] }
-eframe = "0.25"
+windows = { version = "0.54", features = ["Win32_UI_Input_KeyboardAndMouse"] }
+eframe = "0.26"
 ron = "0.8"
 font-kit = "0.12"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
-clap = { version = "4", features = ["derive"] }
 
 [build-dependencies]
 embed-resource = "2"
